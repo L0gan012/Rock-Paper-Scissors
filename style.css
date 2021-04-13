@@ -1,5 +1,29 @@
 * {
-    margin: 0;
+    margin: 10px;
     padding: 0;
     box-sizing: border-box;
+    border: 1px solid red;
+}
+
+header {
+    background-color: hsla(120, 50%, 50%, 1);
+    padding: 30px;
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+section {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+}
+
+.player-area {
+    border-color: green;
+    width: 50%;
+}
+
+.header-text {
+    color: white;
 }
