@@ -2,6 +2,12 @@
 <html>
     <head>
         <title>Rock, Paper, Scissors</title>
+
+        <!-- Fonts -->
+        <link rel="preconnect" href="https://fonts.gstatic.com">
+        <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Dela+Gothic+One&display=swap" rel="stylesheet">
+
+        <!-- Stylesheet -->
         <link href="style.css" type="text/css" rel="stylesheet">
     </head>
     <body>
@@ -12,25 +18,37 @@
         </header>
         <section class="description">
             <p>Rock, Paper, Scissors may seem like a game of chance yet there is extremely complex strategy involved in every game.</p>
+            <br>
+            <p>Here you will test your wit against an AI agent trained to DESTROY you...</p>
         </section>
         <section class="game-area">
-            <section class="player-area">
-                
+            <section class="result-area">
+                <div class="result">
+                    <h3>Wins</h3>
+                    <p>0</p>
+                </div>
+                <div class="result">
+                    <h3>Ties</h3>
+                    <p>0</p>
+                </div>
+                <div class="result">
+                    <h3>Loses</h3>
+                    <p>0</p>
+                </div>
             </section>
-            <section class="player-area">
+            <section class="display-area">
+                <section class="player-area">
+                    
+                </section>
+                <section class="player-area">
 
+                </section>
             </section>
-        </section>
-        <section class="selection-area">
-            <div class="hand-button">
-                <img src="images/rock-hand.jpg">
-            </div>
-            <div class="hand-button">
-                <img src="images/paper-hand.jpg">
-            </div>
-            <div class="hand-button">
-                <img src="images/scissors-hand.jpg">
-            </div>
+            <section class="selection-area">
+                <img class="hand-button" src="images/player-rock-hand.jpg">
+                <img class="hand-button" src="images/player-paper-hand.jpg">
+                <img class="hand-button" src="images/player-scissors-hand.jpg">
+            </section>
         </section>
         <section class="stats">
 
