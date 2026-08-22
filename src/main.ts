@@ -1,0 +1,68 @@
+import '../style.css';
+
+type Move = 'rock' | 'paper' | 'scissors';
+type Outcome = 'win' | 'tie' | 'loss';
+
+const moves: Move[] = ['rock', 'paper', 'scissors'];
+const counters: Record<Move, Move> = { rock: 'paper', paper: 'scissors', scissors: 'rock' };
+const beats: Record<Move, Move> = { rock: 'scissors', paper: 'rock', scissors: 'paper' };
+const imagePaths: Record<Move, string> = {
+  rock: '/Images/player-rock-hand.jpg',
+  paper: '/Images/player-paper-hand.jpg',
+  scissors: '/Images/player-scissors-hand.jpg',
+};
+
+const handButtons = document.querySelectorAll<HTMLButtonElement>('.choice-button');
+const roundStatus = document.querySelector<HTMLElement>('#round-status');
+const roundMessage = document.querySelector<HTMLElement>('#round-message');
+const playerDisplay = document.querySelector<HTMLElement>('#player-display');
+const computerDisplay = document.querySelector<HTMLElement>('#computer-display');
+const roundNumber = document.querySelector<HTMLElement>('#round-number');
+const scoreElements: Record<Outcome, HTMLElement | null> = {
+  win: document.querySelector('#wins'), tie: document.querySelector('#ties'), loss: document.querySelector('#losses'),
+};
+
+const history: Move[] = [];
+const scores: Record<Outcome, number> = { win: 0, tie: 0, loss: 0 };
+
+function chooseComputerMove(): Move {
+  if (history.length === 0) return moves[Math.floor(Math.random() * moves.length)];
+  const counts = history.reduce<Record<Move, number>>((total, move) => {
+    total[move] += 1;
+    return total;
+  }, { rock: 0, paper: 0, scissors: 0 });
+  const predictedMove = moves.reduce((mostCommon, move) => counts[move] > counts[mostCommon] ? move : mostCommon, 'rock');
+  return counters[predictedMove];
+}
+
+function getOutcome(playerMove: Move, computerMove: Move): Outcome {
+  if (playerMove === computerMove) return 'tie';
+  return beats[playerMove] === computerMove ? 'win' : 'loss';
+}
+
+function showMove(element: HTMLElement | null, move: Move): void {
+  if (element) element.innerHTML = `<img src="${imagePaths[move]}" alt="${move}" />`;
+}
+
+handButtons.forEach((button) => {
+  button.addEventListener('click', () => {
+    const playerMove = button.dataset.choice as Move;
+    const computerMove = chooseComputerMove();
+    const outcome = getOutcome(playerMove, computerMove);
+
+    handButtons.forEach((currentButton) => currentButton.classList.remove('selected'));
+    button.classList.add('selected');
+    showMove(playerDisplay, playerMove);
+    showMove(computerDisplay, computerMove);
+    history.push(playerMove);
+    scores[outcome] += 1;
+
+    if (roundStatus) roundStatus.textContent = outcome === 'tie' ? 'ROUND DRAW' : outcome === 'win' ? 'ROUND WON' : 'ROUND LOST';
+    if (roundMessage) roundMessage.textContent = outcome === 'tie'
+      ? `Both players chose ${playerMove}`
+      : outcome === 'win' ? `${playerMove} beats ${computerMove}` : `${computerMove} beats ${playerMove}`;
+    if (roundNumber) roundNumber.textContent = String(history.length + 1).padStart(2, '0');
+    const scoreElement = scoreElements[outcome];
+    if (scoreElement) scoreElement.textContent = String(scores[outcome]);
+  });
+});
