@@ -7,13 +7,12 @@ const counters: Record<ModelMove, ModelMove> = {
   scissors: 'rock',
 };
 
-function createFeatures(game: GameRecord | undefined): number[] {
+function createFeatures(previousMove?: ModelMove, previousOutcome?: GameRecord['outcome']): number[] {
   const features = [1, 0, 0, 0, 0, 0, 0];
-  if (!game) return features;
 
-  if (game.previousMove) features[moves.indexOf(game.previousMove) + 1] = 1;
-  if (game.previousOutcome) {
-    const outcomeIndex = ['win', 'tie', 'loss'].indexOf(game.previousOutcome);
+  if (previousMove) features[moves.indexOf(previousMove) + 1] = 1;
+  if (previousOutcome) {
+    const outcomeIndex = ['win', 'tie', 'loss'].indexOf(previousOutcome);
     features[outcomeIndex + 4] = 1;
   }
   return features;
@@ -29,7 +28,7 @@ export function choosePerceptronMove(games: GameRecord[]): ModelMove {
   const weights = moves.map(() => Array(7).fill(0));
   for (let pass = 0; pass < 20; pass += 1) {
     for (let index = 0; index < games.length; index += 1) {
-      const features = createFeatures(games[index]);
+      const features = createFeatures(games[index].previousMove, games[index].previousOutcome);
       const scores = moves.map((_, classIndex) => score(features, weights, classIndex));
       const predicted = scores.indexOf(Math.max(...scores));
       const actual = moves.indexOf(games[index].playerMove);
@@ -42,7 +41,8 @@ export function choosePerceptronMove(games: GameRecord[]): ModelMove {
     }
   }
 
-  const currentContext = createFeatures(games[games.length - 1]);
+  const latestGame = games[games.length - 1];
+  const currentContext = createFeatures(latestGame.playerMove, latestGame.outcome);
   const predictedPlayerMove = moves[moves.map((_, classIndex) => score(currentContext, weights, classIndex))
     .indexOf(Math.max(...moves.map((_, classIndex) => score(currentContext, weights, classIndex))))];
   return counters[predictedPlayerMove];

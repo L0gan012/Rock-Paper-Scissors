@@ -29,9 +29,14 @@ function categoricalLikelihood<T>(
 }
 
 export function chooseNaiveBayesMove(games: GameRecord[]): ModelMove {
-  if (games.length === 0) {
-    return moves[Math.floor(Math.random() * moves.length)];
-  }
+  const probabilities = getNaiveBayesProbabilities(games);
+  const predictedPlayerMove = moves.reduce((mostLikely, move) =>
+    probabilities[move] > probabilities[mostLikely] ? move : mostLikely, 'rock');
+  return counters[predictedPlayerMove];
+}
+
+export function getNaiveBayesProbabilities(games: GameRecord[]): Record<ModelMove, number> {
+  if (games.length === 0) return { rock: 1 / 3, paper: 1 / 3, scissors: 1 / 3 };
 
   const latestGame = games[games.length - 1];
   const posterior = (move: ModelMove): number => {
@@ -42,8 +47,11 @@ export function chooseNaiveBayesMove(games: GameRecord[]): ModelMove {
     return prior * previousMoveLikelihood * previousOutcomeLikelihood * repeatedLikelihood;
   };
 
-  const predictedPlayerMove = moves.reduce((mostLikely, move) =>
-    posterior(move) > posterior(mostLikely) ? move : mostLikely, 'rock');
-
-  return counters[predictedPlayerMove];
+  const posteriors = moves.map(posterior);
+  const total = posteriors.reduce((sum, value) => sum + value, 0);
+  return {
+    rock: posteriors[0] / total,
+    paper: posteriors[1] / total,
+    scissors: posteriors[2] / total,
+  };
 }
