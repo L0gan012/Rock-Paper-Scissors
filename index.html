@@ -1,60 +1,130 @@
-<!DOCTYPE html>
-<html>
-    <head>
-        <title>Rock, Paper, Scissors</title>
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#121416" />
+    <title>RPS / Neural Match</title>
+  </head>
+  <body>
+    <main class="app-shell">
+      <header class="topbar">
+        <p class="eyebrow topbar-eyebrow">ROCK / PAPER / SCISSORS</p>
+        <button
+          class="theme-toggle"
+          id="theme-toggle"
+          type="button"
+          aria-pressed="false"
+        >
+          <span class="theme-toggle-icon" aria-hidden="true">◐</span>
+          <span id="theme-label">LIGHT MODE</span>
+        </button>
+      </header>
 
-        <!-- Fonts -->
-        <link rel="preconnect" href="https://fonts.gstatic.com">
-        <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Dela+Gothic+One&display=swap" rel="stylesheet">
+      <section class="intro" aria-labelledby="page-title">
+        <h1 id="page-title">Make your move.</h1>
+        <p class="intro-copy">
+          A pattern-learning opponent is watching. Keep it guessing.
+        </p>
+      </section>
 
-        <!-- Stylesheet -->
-        <link href="style.css" type="text/css" rel="stylesheet">
-    </head>
-    <body>
-        <header>
-            <div class="header-text">
-                <h1>Rock, Paper, Scissors</h1>
+      <section class="model-picker" aria-labelledby="model-title">
+        <div class="model-picker-info">
+          <p class="model-picker-label" id="model-title">
+            CHOOSE YOUR OPPONENT
+          </p>
+          <p class="model-picker-copy" id="model-description">
+            Counters the move you use most often.
+          </p>
+        </div>
+        <label class="model-select-label" for="model-select"
+          >LEARNING STYLE</label
+        >
+        <select id="model-select" aria-label="Choose opponent model">
+          <option value="frequency">Adaptive Frequency</option>
+          <option value="naive-bayes">Naive Bayes</option>
+          <option value="perceptron">Perceptron</option>
+        </select>
+      </section>
+
+      <section class="scoreboard" aria-label="Game score">
+        <div class="score-item score-item--player">
+          <span>YOU</span><strong id="wins">0</strong>
+        </div>
+        <div class="score-divider">—</div>
+        <div class="score-item">
+          <span>DRAW</span><strong id="ties">0</strong>
+        </div>
+        <div class="score-divider">—</div>
+        <div class="score-item score-item--opponent">
+          <span>AI</span><strong id="losses">0</strong>
+        </div>
+      </section>
+
+      <section class="arena" aria-label="Current round">
+        <div class="arena-heading">
+          <span>ROUND <b id="round-number">01</b></span
+          ><span id="round-status">AWAITING INPUT</span>
+        </div>
+        <div class="versus-grid">
+          <div class="fighter-card fighter-card--player">
+            <div class="fighter-label"><span>01</span><span>PLAYER</span></div>
+            <div class="hand-display" id="player-display"><span>?</span></div>
+          </div>
+          <div class="versus">VS</div>
+          <div class="fighter-card fighter-card--ai">
+            <div class="fighter-label">
+              <span>02</span><span id="model-name">ADAPTIVE FREQUENCY</span>
             </div>
-        </header>
-        <section class="description">
-            <p>Rock, Paper, Scissors may seem like a game of chance yet there is extremely complex strategy involved in every game.</p>
-            <br>
-            <p>Here you will test your wit against an AI agent trained to DESTROY you...</p>
-        </section>
-        <section class="game-area">
-            <section class="result-area">
-                <div class="result">
-                    <h3>Wins</h3>
-                    <p>0</p>
-                </div>
-                <div class="result">
-                    <h3>Ties</h3>
-                    <p>0</p>
-                </div>
-                <div class="result">
-                    <h3>Loses</h3>
-                    <p>0</p>
-                </div>
-            </section>
-            <section class="display-area">
-                <section class="player-area">
-                    
-                </section>
-                <section class="player-area">
+            <div class="hand-display" id="computer-display"><span>?</span></div>
+          </div>
+        </div>
+        <p class="round-message" id="round-message">
+          Choose a hand to start the round
+        </p>
+      </section>
 
-                </section>
-            </section>
-            <section class="selection-area">
-                <img class="hand-button" src="images/player-rock-hand.jpg">
-                <img class="hand-button" src="images/player-paper-hand.jpg">
-                <img class="hand-button" src="images/player-scissors-hand.jpg">
-            </section>
-        </section>
-        <section class="stats">
+      <section class="selection" aria-labelledby="selection-title">
+        <div class="selection-heading">
+          <h2 id="selection-title">Select your hand</h2>
+          <span>BEST OF ∞</span>
+        </div>
+        <div class="choice-grid">
+          <button
+            class="choice-button"
+            type="button"
+            data-choice="rock"
+            aria-label="Choose rock"
+          >
+            <img src="/Images/player-rock-hand.jpg" alt="" /><span>ROCK</span
+            ><b>R</b>
+          </button>
+          <button
+            class="choice-button"
+            type="button"
+            data-choice="paper"
+            aria-label="Choose paper"
+          >
+            <img src="/Images/player-paper-hand.jpg" alt="" /><span>PAPER</span
+            ><b>P</b>
+          </button>
+          <button
+            class="choice-button"
+            type="button"
+            data-choice="scissors"
+            aria-label="Choose scissors"
+          >
+            <img src="/Images/player-scissors-hand.jpg" alt="" /><span
+              >SCISSORS</span
+            ><b>S</b>
+          </button>
+        </div>
+      </section>
 
-        </section>
-        <footer>
-
-        </footer>
-    </body>
+      <footer class="footer">
+        <span>ADAPTIVE PLAYGROUND</span><span>RPS / 2026</span>
+      </footer>
+    </main>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
 </html>
