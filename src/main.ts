@@ -1,4 +1,5 @@
 import '../style.css';
+import { chooseNaiveBayesMove, type GameRecord } from './models/naiveBayes';
 
 type Move = 'rock' | 'paper' | 'scissors';
 type Outcome = 'win' | 'tie' | 'loss';
@@ -30,11 +31,12 @@ const scoreElements: Record<Outcome, HTMLElement | null> = {
 };
 
 const history: Move[] = [];
+const games: GameRecord[] = [];
 const scores: Record<Outcome, number> = { win: 0, tie: 0, loss: 0 };
 let selectedModel: Model = 'frequency';
 const modelDescriptions: Record<Model, string> = {
   frequency: 'Counters the move you use most often.',
-  'naive-bayes': 'Studies what you tend to play after your previous move.',
+  'naive-bayes': 'Combines move, outcome, and repeat patterns to estimate your next move.',
   perceptron: 'Trains a lightweight classifier to recognize your sequences.',
 };
 
@@ -77,16 +79,6 @@ function mostFrequentMove(): Move {
   return moves.reduce((mostCommon, move) => counts[move] > counts[mostCommon] ? move : mostCommon, 'rock');
 }
 
-function naiveBayesMove(): Move {
-  if (history.length < 2) return randomMove();
-  const previousMove = history[history.length - 1];
-  const counts = { rock: 1, paper: 1, scissors: 1 } as Record<Move, number>;
-  for (let index = 1; index < history.length; index += 1) {
-    if (history[index - 1] === previousMove) counts[history[index]] += 1;
-  }
-  return moves.reduce((mostLikely, move) => counts[move] > counts[mostLikely] ? move : mostLikely, 'rock');
-}
-
 function perceptronMove(): Move {
   if (history.length < 2) return randomMove();
   const weights = Array.from({ length: 4 }, () => [0, 0, 0]);
@@ -110,10 +102,9 @@ function perceptronMove(): Move {
 }
 
 function chooseComputerMove(): Move {
+  if (selectedModel === 'naive-bayes') return chooseNaiveBayesMove(games);
   if (history.length === 0) return randomMove();
-  const predictedMove = selectedModel === 'naive-bayes'
-    ? naiveBayesMove()
-    : selectedModel === 'perceptron' ? perceptronMove() : mostFrequentMove();
+  const predictedMove = selectedModel === 'perceptron' ? perceptronMove() : mostFrequentMove();
   return counters[predictedMove];
 }
 
@@ -137,6 +128,14 @@ handButtons.forEach((button) => {
     showMove(playerDisplay, playerMove);
     showMove(computerDisplay, computerMove);
     history.push(playerMove);
+    const previousGame = games[games.length - 1];
+    games.push({
+      playerMove,
+      outcome,
+      previousMove: previousGame?.playerMove,
+      previousOutcome: previousGame?.outcome,
+      repeated: previousGame?.playerMove === playerMove,
+    });
     scores[outcome] += 1;
 
     if (roundStatus) roundStatus.textContent = outcome === 'tie' ? 'ROUND DRAW' : outcome === 'win' ? 'ROUND WON' : 'ROUND LOST';
