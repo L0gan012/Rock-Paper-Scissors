@@ -18,12 +18,33 @@ const roundMessage = document.querySelector<HTMLElement>('#round-message');
 const playerDisplay = document.querySelector<HTMLElement>('#player-display');
 const computerDisplay = document.querySelector<HTMLElement>('#computer-display');
 const roundNumber = document.querySelector<HTMLElement>('#round-number');
+const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
+const themeLabel = document.querySelector<HTMLElement>('#theme-label');
+const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
 const scoreElements: Record<Outcome, HTMLElement | null> = {
   win: document.querySelector('#wins'), tie: document.querySelector('#ties'), loss: document.querySelector('#losses'),
 };
 
 const history: Move[] = [];
 const scores: Record<Outcome, number> = { win: 0, tie: 0, loss: 0 };
+
+function setTheme(theme: 'dark' | 'light'): void {
+  document.documentElement.dataset.theme = theme;
+  const isLight = theme === 'light';
+  themeToggle?.setAttribute('aria-pressed', String(isLight));
+  if (themeLabel) themeLabel.textContent = isLight ? 'DARK MODE' : 'LIGHT MODE';
+  themeMeta?.setAttribute('content', isLight ? '#f4f1ea' : '#121416');
+}
+
+const savedTheme = localStorage.getItem('rps-theme');
+const preferredTheme = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
+setTheme(savedTheme === 'light' || savedTheme === 'dark' ? savedTheme : preferredTheme);
+
+themeToggle?.addEventListener('click', () => {
+  const nextTheme = document.documentElement.dataset.theme === 'light' ? 'dark' : 'light';
+  setTheme(nextTheme);
+  localStorage.setItem('rps-theme', nextTheme);
+});
 
 function chooseComputerMove(): Move {
   if (history.length === 0) return moves[Math.floor(Math.random() * moves.length)];

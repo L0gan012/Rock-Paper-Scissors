@@ -1,15 +1,38 @@
 @import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&display=swap");
 
 :root {
-  color: #18191b;
-  background: #f4f1ea;
+  color: #f2f0e9;
+  background: #121416;
   font-family: "Manrope", sans-serif;
   font-synthesis: none;
+  --ink: #f2f0e9;
+  --muted: #929891;
+  --line: #343936;
+  --paper: #121416;
+  --card: #1b1f1e;
+  --score: #171a1b;
+  --choice: #171a1b;
+  --hand-border: #ffffff12;
+  --player-panel: #292d2b;
+  --ai-panel: #252a38;
+  --lime: #d0f57a;
+  --coral: #ff685d;
+  --blue: #4561e8;
+}
+
+:root[data-theme="light"] {
+  color: #18191b;
+  background: #f4f1ea;
   --ink: #18191b;
-  --muted: #7c7d79;
+  --muted: #737771;
   --line: #d8d5cd;
   --paper: #f4f1ea;
   --card: #fbfaf7;
+  --score: #fbfaf7;
+  --choice: #fbfaf7;
+  --hand-border: #18191b12;
+  --player-panel: #eeeae1;
+  --ai-panel: #e8e9f5;
   --lime: #c8f169;
   --coral: #ff685d;
   --blue: #4561e8;
@@ -22,6 +45,14 @@ body {
   margin: 0;
   min-width: 320px;
   background: var(--paper);
+  background-image: radial-gradient(
+    circle at 12% 8%,
+    #242b29 0,
+    transparent 28rem
+  );
+}
+:root[data-theme="light"] body {
+  background-image: none;
 }
 button,
 a {
@@ -78,12 +109,38 @@ button {
   gap: 8px;
   color: var(--muted);
 }
+.theme-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 11px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  cursor: pointer;
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  transition:
+    color 0.2s ease,
+    border-color 0.2s ease,
+    background 0.2s ease;
+}
+.theme-toggle:hover {
+  color: var(--ink);
+  background: var(--line);
+}
+.theme-toggle-icon {
+  font-size: 14px;
+  line-height: 1;
+}
 .status-dot {
   width: 7px;
   height: 7px;
   border-radius: 50%;
   background: #45b86b;
-  box-shadow: 0 0 0 4px #d7efd9;
+  box-shadow: 0 0 0 4px #223529;
 }
 .intro {
   padding: 76px 0 48px;
@@ -120,8 +177,9 @@ h1 {
   grid-template-columns: 1fr auto 1fr auto 1fr;
   align-items: center;
   padding: 22px 30px;
-  border-top: 1px solid var(--ink);
-  border-bottom: 1px solid var(--ink);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: var(--score);
 }
 .score-item {
   display: flex;
@@ -152,6 +210,8 @@ h1 {
   padding: 20px 20px 29px;
   background: var(--card);
   border: 1px solid var(--line);
+  border-radius: 24px;
+  box-shadow: 0 18px 50px #00000024;
 }
 .arena-heading,
 .selection-heading,
@@ -181,10 +241,11 @@ h1 {
 .fighter-card {
   min-height: 300px;
   padding: 18px;
-  background: #eeeae1;
+  background: var(--player-panel);
+  border-radius: 16px;
 }
 .fighter-card--ai {
-  background: #e8e9f5;
+  background: var(--ai-panel);
 }
 .fighter-label {
   color: var(--muted);
@@ -209,7 +270,8 @@ h1 {
   height: 180px;
   object-fit: cover;
   border-radius: 50%;
-  mix-blend-mode: multiply;
+  border: 8px solid var(--hand-border);
+  mix-blend-mode: screen;
   animation: reveal 0.35s ease both;
 }
 .versus {
@@ -259,8 +321,9 @@ h1 {
   grid-template-columns: 1fr auto;
   grid-template-rows: 1fr auto;
   gap: 8px;
-  background: transparent;
+  background: var(--choice);
   border: 1px solid var(--line);
+  border-radius: 16px;
   cursor: pointer;
   text-align: left;
   transition:
@@ -279,8 +342,12 @@ h1 {
   height: 94px;
   grid-row: 1 / span 2;
   object-fit: cover;
-  mix-blend-mode: multiply;
+  mix-blend-mode: screen;
   border-radius: 50%;
+}
+:root[data-theme="light"] .hand-display img,
+:root[data-theme="light"] .choice-button img {
+  mix-blend-mode: multiply;
 }
 .choice-button span {
   align-self: end;
@@ -309,6 +376,12 @@ h1 {
   }
   .model-status {
     font-size: 9px;
+  }
+  .theme-toggle {
+    padding: 7px 9px;
+  }
+  .theme-toggle span:last-child {
+    display: none;
   }
   .intro {
     padding: 56px 0 38px;
