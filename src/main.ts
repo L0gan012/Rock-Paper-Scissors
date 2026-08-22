@@ -1,8 +1,18 @@
 import '../style.css';
+import { chooseNaiveBayesMove, getNaiveBayesProbabilities, type GameRecord } from './models/naiveBayes';
+import { choosePerceptronMove } from './models/perceptron';
+import { chooseMarkovMove } from './models/markov';
 
 type Move = 'rock' | 'paper' | 'scissors';
 type Outcome = 'win' | 'tie' | 'loss';
-type Model = 'frequency' | 'naive-bayes' | 'perceptron';
+type Model = 'frequency' | 'naive-bayes' | 'perceptron' | 'markov';
+type BenchmarkOpponent = 'always-rock' | 'always-paper' | 'always-scissors' | 'repeat-last' | 'repeating' | 'random-mode' | 'countering' | 'aggressive' | 'cycle' | 'alternate' | 'random';
+interface RoundRecord extends GameRecord {
+  computerMove: Move;
+  model: string;
+  playerLikelihood: number;
+  computerLikelihood: number;
+}
 
 const moves: Move[] = ['rock', 'paper', 'scissors'];
 const counters: Record<Move, Move> = { rock: 'paper', paper: 'scissors', scissors: 'rock' };
@@ -22,6 +32,18 @@ const roundNumber = document.querySelector<HTMLElement>('#round-number');
 const modelSelect = document.querySelector<HTMLSelectElement>('#model-select');
 const modelName = document.querySelector<HTMLElement>('#model-name');
 const modelDescription = document.querySelector<HTMLElement>('#model-description');
+const benchmarkButton = document.querySelector<HTMLButtonElement>('#benchmark-run');
+const benchmarkResults = document.querySelector<HTMLElement>('#benchmark-results');
+const benchmarkModelSelect = document.querySelector<HTMLSelectElement>('#benchmark-model');
+const benchmarkOpponentSelect = document.querySelector<HTMLSelectElement>('#benchmark-opponent');
+const viewTabs = document.querySelectorAll<HTMLButtonElement>('.view-tab');
+const viewSections = document.querySelectorAll<HTMLElement>('.view-section');
+const historyResults = document.querySelector<HTMLElement>('#history-results');
+const historyCount = document.querySelector<HTMLElement>('#history-count');
+const historyPageSizeSelect = document.querySelector<HTMLSelectElement>('#history-page-size');
+const historyPrevious = document.querySelector<HTMLButtonElement>('#history-previous');
+const historyNext = document.querySelector<HTMLButtonElement>('#history-next');
+const historyPageLabel = document.querySelector<HTMLElement>('#history-page-label');
 const themeToggle = document.querySelector<HTMLButtonElement>('#theme-toggle');
 const themeLabel = document.querySelector<HTMLElement>('#theme-label');
 const themeMeta = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
@@ -30,13 +52,30 @@ const scoreElements: Record<Outcome, HTMLElement | null> = {
 };
 
 const history: Move[] = [];
+const games: RoundRecord[] = [];
 const scores: Record<Outcome, number> = { win: 0, tie: 0, loss: 0 };
 let selectedModel: Model = 'frequency';
+let historyPage = 1;
+let historyPageSize = 10;
 const modelDescriptions: Record<Model, string> = {
   frequency: 'Counters the move you use most often.',
-  'naive-bayes': 'Studies what you tend to play after your previous move.',
+  'naive-bayes': 'Combines move, outcome, and repeat patterns to estimate your next move.',
   perceptron: 'Trains a lightweight classifier to recognize your sequences.',
+  markov: 'Learns which move most often follows your previous move.',
 };
+
+viewTabs.forEach((tab) => {
+  tab.addEventListener('click', () => {
+    const targetView = tab.dataset.viewTarget;
+    if (!targetView) return;
+    viewTabs.forEach((currentTab) => {
+      const isActive = currentTab === tab;
+      currentTab.classList.toggle('is-active', isActive);
+      currentTab.setAttribute('aria-selected', String(isActive));
+    });
+    viewSections.forEach((section) => section.classList.toggle('is-active', section.dataset.view === targetView));
+  });
+});
 
 function setTheme(theme: 'dark' | 'light'): void {
   document.documentElement.dataset.theme = theme;
@@ -77,45 +116,78 @@ function mostFrequentMove(): Move {
   return moves.reduce((mostCommon, move) => counts[move] > counts[mostCommon] ? move : mostCommon, 'rock');
 }
 
-function naiveBayesMove(): Move {
-  if (history.length < 2) return randomMove();
-  const previousMove = history[history.length - 1];
-  const counts = { rock: 1, paper: 1, scissors: 1 } as Record<Move, number>;
-  for (let index = 1; index < history.length; index += 1) {
-    if (history[index - 1] === previousMove) counts[history[index]] += 1;
-  }
-  return moves.reduce((mostLikely, move) => counts[move] > counts[mostLikely] ? move : mostLikely, 'rock');
-}
-
-function perceptronMove(): Move {
-  if (history.length < 2) return randomMove();
-  const weights = Array.from({ length: 4 }, () => [0, 0, 0]);
-  const score = (features: number[], classIndex: number) => features.reduce((sum, feature, index) => sum + feature * weights[index][classIndex], 0);
-  for (let pass = 0; pass < 12; pass += 1) {
-    for (let index = 1; index < history.length; index += 1) {
-      const features = [1, 0, 0, 0];
-      features[moves.indexOf(history[index - 1]) + 1] = 1;
-      const classScores = moves.map((_, classIndex) => score(features, classIndex));
-      const predicted = classScores.indexOf(Math.max(...classScores));
-      const actual = moves.indexOf(history[index]);
-      if (predicted !== actual) features.forEach((feature, featureIndex) => {
-        weights[featureIndex][predicted] -= feature;
-        weights[featureIndex][actual] += feature;
-      });
-    }
-  }
-  const features = [1, 0, 0, 0];
-  features[moves.indexOf(history[history.length - 1]) + 1] = 1;
-  return moves[ moves.map((_, classIndex) => score(features, classIndex)).indexOf(Math.max(...moves.map((_, classIndex) => score(features, classIndex)))) ];
-}
-
 function chooseComputerMove(): Move {
+  if (selectedModel === 'naive-bayes') return chooseNaiveBayesMove(games);
+  if (selectedModel === 'perceptron') return choosePerceptronMove(games);
+  if (selectedModel === 'markov') return chooseMarkovMove(games);
   if (history.length === 0) return randomMove();
-  const predictedMove = selectedModel === 'naive-bayes'
-    ? naiveBayesMove()
-    : selectedModel === 'perceptron' ? perceptronMove() : mostFrequentMove();
+  const predictedMove = mostFrequentMove();
   return counters[predictedMove];
 }
+
+function chooseBenchmarkMove(model: Model, history: Move[], games: GameRecord[]): Move {
+  if (model === 'naive-bayes') return chooseNaiveBayesMove(games);
+  if (model === 'perceptron') return choosePerceptronMove(games);
+  if (model === 'markov') return chooseMarkovMove(games);
+  if (history.length === 0) return randomMove();
+  const counts = history.reduce<Record<Move, number>>((total, move) => {
+    total[move] += 1;
+    return total;
+  }, { rock: 0, paper: 0, scissors: 0 });
+  const predictedMove = moves.reduce((mostCommon, move) => counts[move] > counts[mostCommon] ? move : mostCommon, 'rock');
+  return counters[predictedMove];
+}
+
+function chooseBenchmarkPlayerMove(opponent: BenchmarkOpponent, history: Move[], round: number): Move {
+  if (opponent === 'always-paper') return 'paper';
+  if (opponent === 'always-scissors') return 'scissors';
+  if ((opponent === 'repeat-last' || opponent === 'repeating') && history.length > 0) return history[history.length - 1];
+  if (opponent === 'random-mode') return randomMove();
+  if (opponent === 'countering' && history.length > 0) return counters[history[history.length - 1]];
+  if (opponent === 'aggressive' && history.length > 0) return counters[mostFrequentMoveFrom(history)];
+  if (opponent === 'cycle') return moves[round % moves.length];
+  if (opponent === 'alternate') return round % 2 === 0 ? 'rock' : 'paper';
+  if (opponent === 'random') return randomMove();
+  return 'rock';
+}
+
+function mostFrequentMoveFrom(moveHistory: Move[]): Move {
+  const counts = moveHistory.reduce<Record<Move, number>>((total, move) => {
+    total[move] += 1;
+    return total;
+  }, { rock: 0, paper: 0, scissors: 0 });
+  return moves.reduce((mostCommon, move) => counts[move] > counts[mostCommon] ? move : mostCommon, 'rock');
+}
+
+function runBenchmark(): void {
+  const modelLabels: Record<Model, string> = { frequency: 'ADAPTIVE FREQUENCY', 'naive-bayes': 'NAIVE BAYES', perceptron: 'PERCEPTRON', markov: 'MARKOV CHAIN' };
+  const model = (benchmarkModelSelect?.value ?? 'frequency') as Model;
+  const opponent = (benchmarkOpponentSelect?.value ?? 'always-rock') as BenchmarkOpponent;
+  const opponentLabel = benchmarkOpponentSelect?.options[benchmarkOpponentSelect.selectedIndex].text ?? 'Always Rock';
+  let result = { wins: 0, ties: 0, losses: 0 };
+  {
+      const playerHistory: Move[] = [];
+      const benchmarkGames: GameRecord[] = [];
+      let aiWins = 0;
+      let ties = 0;
+      let playerWins = 0;
+      for (let round = 0; round < 100; round += 1) {
+        const playerMove = chooseBenchmarkPlayerMove(opponent, playerHistory, round);
+        const computerMove = chooseBenchmarkMove(model, playerHistory, benchmarkGames);
+        const outcome = getOutcome(playerMove, computerMove);
+        if (outcome === 'loss') aiWins += 1;
+        if (outcome === 'tie') ties += 1;
+        if (outcome === 'win') playerWins += 1;
+        const previousGame = benchmarkGames[benchmarkGames.length - 1];
+        benchmarkGames.push({ playerMove, outcome, previousMove: previousGame?.playerMove, previousOutcome: previousGame?.outcome, repeated: previousGame?.playerMove === playerMove });
+        playerHistory.push(playerMove);
+      }
+      result = { wins: aiWins, ties, losses: playerWins };
+  }
+  if (benchmarkResults) benchmarkResults.innerHTML = `<strong>${result.wins}%</strong><span>AI WIN RATE</span><div class="benchmark-bar" role="img" aria-label="${result.wins} AI wins, ${result.ties} draws, ${result.losses} player wins"><i class="benchmark-bar-ai" style="width: ${result.wins}%"></i><i class="benchmark-bar-draw" style="width: ${result.ties}%"></i><i class="benchmark-bar-player" style="width: ${result.losses}%"></i></div><div class="benchmark-legend"><span><i class="legend-ai"></i>AI WINS ${result.wins}</span><span><i class="legend-draw"></i>DRAWS ${result.ties}</span><span><i class="legend-player"></i>PLAYER WINS ${result.losses}</span></div><small>${modelLabels[model]} VS ${opponentLabel.toUpperCase()} · 100 ROUNDS</small>`;
+}
+
+benchmarkButton?.addEventListener('click', runBenchmark);
 
 function getOutcome(playerMove: Move, computerMove: Move): Outcome {
   if (playerMove === computerMove) return 'tie';
@@ -125,6 +197,46 @@ function getOutcome(playerMove: Move, computerMove: Move): Outcome {
 function showMove(element: HTMLElement | null, move: Move): void {
   if (element) element.innerHTML = `<img src="${imagePaths[move]}" alt="${move}" />`;
 }
+
+function historicalLikelihood(move: Move, values: Move[]): number {
+  const count = values.filter((value) => value === move).length;
+  return Math.round(((count + 1) / (values.length + moves.length)) * 100);
+}
+
+function getModelLikelihood(move: Move, games: GameRecord[], fallbackValues: Move[]): number {
+  if (selectedModel !== 'naive-bayes') return historicalLikelihood(move, fallbackValues) / 100;
+  return getNaiveBayesProbabilities(games)[move];
+}
+
+function renderHistory(): void {
+  if (historyCount) historyCount.textContent = `${games.length} ${games.length === 1 ? 'ROUND' : 'ROUNDS'}`;
+  if (!historyResults) return;
+  if (games.length === 0) {
+    historyResults.innerHTML = '<tr><td colspan="7">Play a round to start your session log</td></tr>';
+    if (historyPageLabel) historyPageLabel.textContent = 'PAGE 1 OF 1';
+    if (historyPrevious) historyPrevious.disabled = true;
+    if (historyNext) historyNext.disabled = true;
+    return;
+  }
+  const totalPages = Math.ceil(games.length / historyPageSize);
+  historyPage = Math.min(historyPage, totalPages);
+  const start = (historyPage - 1) * historyPageSize;
+  const pageGames = games.slice().reverse().slice(start, start + historyPageSize);
+  historyResults.innerHTML = pageGames.map((game, index) =>
+    `<tr><td>${games.length - start - index}</td><td>${game.playerMove.toUpperCase()}</td><td>${game.playerLikelihood}%</td><td>${game.computerMove.toUpperCase()}</td><td>${game.computerLikelihood}%</td><td>${game.model}</td><td class="result-${game.outcome}">${game.outcome.toUpperCase()}</td></tr>`).join('');
+  if (historyPageLabel) historyPageLabel.textContent = `PAGE ${historyPage} OF ${totalPages}`;
+  if (historyPrevious) historyPrevious.disabled = historyPage === 1;
+  if (historyNext) historyNext.disabled = historyPage === totalPages;
+}
+
+historyPageSizeSelect?.addEventListener('change', () => {
+  historyPageSize = Number(historyPageSizeSelect.value);
+  historyPage = 1;
+  renderHistory();
+});
+historyPrevious?.addEventListener('click', () => { historyPage -= 1; renderHistory(); });
+historyNext?.addEventListener('click', () => { historyPage += 1; renderHistory(); });
+renderHistory();
 
 handButtons.forEach((button) => {
   button.addEventListener('click', () => {
@@ -136,6 +248,20 @@ handButtons.forEach((button) => {
     button.classList.add('selected');
     showMove(playerDisplay, playerMove);
     showMove(computerDisplay, computerMove);
+    const previousGame = games[games.length - 1];
+    const probabilities = selectedModel === 'naive-bayes' ? getNaiveBayesProbabilities(games) : null;
+    const predictedPlayerMove = moves.find((move) => counters[move] === computerMove) ?? computerMove;
+    games.push({
+      playerMove,
+      outcome,
+      computerMove,
+      model: modelSelect?.options[modelSelect.selectedIndex].text ?? 'Adaptive Frequency',
+      playerLikelihood: Math.round((probabilities?.[playerMove] ?? getModelLikelihood(playerMove, games, history)) * 100),
+      computerLikelihood: Math.round((probabilities?.[predictedPlayerMove] ?? getModelLikelihood(computerMove, games, games.map((game) => game.computerMove))) * 100),
+      previousMove: previousGame?.playerMove,
+      previousOutcome: previousGame?.outcome,
+      repeated: previousGame?.playerMove === playerMove,
+    });
     history.push(playerMove);
     scores[outcome] += 1;
 
@@ -146,5 +272,6 @@ handButtons.forEach((button) => {
     if (roundNumber) roundNumber.textContent = String(history.length + 1).padStart(2, '0');
     const scoreElement = scoreElements[outcome];
     if (scoreElement) scoreElement.textContent = String(scores[outcome]);
+    renderHistory();
   });
 });

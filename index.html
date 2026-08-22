@@ -21,14 +21,49 @@
         </button>
       </header>
 
-      <section class="intro" aria-labelledby="page-title">
+      <nav class="view-tabs" aria-label="Game views">
+        <button
+          class="view-tab is-active"
+          type="button"
+          data-view-target="play"
+          aria-selected="true"
+        >
+          PLAY
+        </button>
+        <button
+          class="view-tab"
+          type="button"
+          data-view-target="history"
+          aria-selected="false"
+        >
+          HISTORY
+        </button>
+        <button
+          class="view-tab"
+          type="button"
+          data-view-target="lab"
+          aria-selected="false"
+        >
+          MODEL LAB
+        </button>
+      </nav>
+
+      <section
+        class="intro view-section is-active"
+        data-view="play"
+        aria-labelledby="page-title"
+      >
         <h1 id="page-title">Make your move.</h1>
         <p class="intro-copy">
           A pattern-learning opponent is watching. Keep it guessing.
         </p>
       </section>
 
-      <section class="model-picker" aria-labelledby="model-title">
+      <section
+        class="model-picker view-section is-active"
+        data-view="play"
+        aria-labelledby="model-title"
+      >
         <div class="model-picker-info">
           <p class="model-picker-label" id="model-title">
             CHOOSE YOUR OPPONENT
@@ -44,10 +79,15 @@
           <option value="frequency">Adaptive Frequency</option>
           <option value="naive-bayes">Naive Bayes</option>
           <option value="perceptron">Perceptron</option>
+          <option value="markov">Markov Chain</option>
         </select>
       </section>
 
-      <section class="scoreboard" aria-label="Game score">
+      <section
+        class="scoreboard view-section is-active"
+        data-view="play"
+        aria-label="Game score"
+      >
         <div class="score-item score-item--player">
           <span>YOU</span><strong id="wins">0</strong>
         </div>
@@ -61,7 +101,11 @@
         </div>
       </section>
 
-      <section class="arena" aria-label="Current round">
+      <section
+        class="arena view-section is-active"
+        data-view="play"
+        aria-label="Current round"
+      >
         <div class="arena-heading">
           <span>ROUND <b id="round-number">01</b></span
           ><span id="round-status">AWAITING INPUT</span>
@@ -84,7 +128,11 @@
         </p>
       </section>
 
-      <section class="selection" aria-labelledby="selection-title">
+      <section
+        class="selection view-section is-active"
+        data-view="play"
+        aria-labelledby="selection-title"
+      >
         <div class="selection-heading">
           <h2 id="selection-title">Select your hand</h2>
           <span>BEST OF ∞</span>
@@ -118,6 +166,119 @@
               >SCISSORS</span
             ><b>S</b>
           </button>
+        </div>
+      </section>
+
+      <section
+        class="history-panel view-section"
+        data-view="history"
+        aria-labelledby="history-title"
+      >
+        <div class="history-heading">
+          <div>
+            <p class="model-picker-label">SESSION LOG</p>
+            <h2 id="history-title">Your rounds.</h2>
+            <p class="model-picker-copy">
+              Likelihoods use the session data available before each round.
+            </p>
+          </div>
+          <span class="history-count" id="history-count">0 ROUNDS</span>
+        </div>
+        <div class="history-table-wrap">
+          <table class="history-table">
+            <thead>
+              <tr>
+                <th>ROUND</th>
+                <th>YOU</th>
+                <th>YOU %</th>
+                <th>AI</th>
+                <th>AI %</th>
+                <th>MODEL</th>
+                <th>RESULT</th>
+              </tr>
+            </thead>
+            <tbody id="history-results">
+              <tr>
+                <td colspan="7">Play a round to start your session log</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="history-controls" aria-label="History pagination">
+          <label for="history-page-size"
+            >ROWS
+            <select id="history-page-size">
+              <option value="5">5</option>
+              <option value="10" selected>10</option>
+              <option value="20">20</option>
+            </select></label
+          >
+          <div class="pagination-buttons">
+            <button
+              id="history-previous"
+              type="button"
+              aria-label="Previous history page"
+            >
+              ←
+            </button>
+            <span id="history-page-label">PAGE 1 OF 1</span>
+            <button
+              id="history-next"
+              type="button"
+              aria-label="Next history page"
+            >
+              →
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section
+        class="benchmark view-section"
+        data-view="lab"
+        aria-labelledby="benchmark-title"
+      >
+        <div class="benchmark-heading">
+          <div>
+            <p class="model-picker-label">MODEL LAB</p>
+            <h2 id="benchmark-title">Put the models to work.</h2>
+            <p class="model-picker-copy">
+              Pick a model and opponent to see how they perform over 100 rounds.
+            </p>
+          </div>
+          <div class="benchmark-actions">
+            <label for="benchmark-model"
+              >MODEL
+              <select id="benchmark-model">
+                <option value="frequency">Adaptive Frequency</option>
+                <option value="naive-bayes">Naive Bayes</option>
+                <option value="perceptron">Perceptron</option>
+                <option value="markov">Markov Chain</option>
+              </select>
+            </label>
+            <label for="benchmark-opponent"
+              >VS
+              <select id="benchmark-opponent">
+                <option value="always-rock">Always Rock</option>
+                <option value="always-paper">Always Paper</option>
+                <option value="always-scissors">Always Scissors</option>
+                <option value="repeat-last">Repeat Last</option>
+                <option value="repeating">Repeating Mode</option>
+                <option value="random-mode">Random Mode</option>
+                <option value="countering">Countering Mode</option>
+                <option value="aggressive">Aggressive Mode</option>
+                <option value="cycle">Cycle Rock / Paper / Scissors</option>
+                <option value="alternate">Alternate Rock / Paper</option>
+                <option value="random">Random</option>
+              </select>
+            </label>
+            <button class="benchmark-button" id="benchmark-run" type="button">
+              RUN TEST
+            </button>
+          </div>
+        </div>
+        <div class="benchmark-result" id="benchmark-results">
+          Run a test to compare performance
         </div>
       </section>
 
