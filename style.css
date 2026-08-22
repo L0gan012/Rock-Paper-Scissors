@@ -153,6 +153,9 @@ button {
   color: var(--blue);
   font-weight: 500;
 }
+.topbar-eyebrow {
+  margin: 0;
+}
 h1,
 h2,
 p {
@@ -200,6 +203,48 @@ h1 {
 }
 .score-item--opponent strong {
   color: var(--coral);
+}
+.model-picker {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin: 0 0 18px;
+  padding: 22px 24px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+}
+.model-picker-info {
+  flex: 1;
+}
+.model-picker-label {
+  margin-bottom: 4px;
+  color: var(--blue);
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.model-picker-copy {
+  color: var(--muted);
+  font-size: 12px;
+}
+.model-select-label {
+  color: var(--muted);
+  font-family: "DM Mono", monospace;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+}
+.model-picker select {
+  min-width: 190px;
+  padding: 10px 34px 10px 12px;
+  color: var(--ink);
+  background-color: var(--choice);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  cursor: pointer;
+  font-family: "DM Mono", monospace;
+  font-size: 11px;
 }
 .score-divider {
   color: var(--line);
@@ -391,6 +436,14 @@ h1 {
   }
   .scoreboard {
     padding: 18px 10px;
+  }
+  .model-picker {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .model-picker select {
+    width: 100%;
   }
   .score-item {
     display: grid;

@@ -9,13 +9,7 @@
   <body>
     <main class="app-shell">
       <header class="topbar">
-        <a class="brand" href="/" aria-label="Neural Match home">
-          <span class="brand-mark" aria-hidden="true">+</span>
-          <span>NEURAL MATCH</span>
-        </a>
-        <div class="model-status">
-          <span class="status-dot"></span> MODEL ONLINE
-        </div>
+        <p class="eyebrow topbar-eyebrow">ROCK / PAPER / SCISSORS</p>
         <button
           class="theme-toggle"
           id="theme-toggle"
@@ -28,11 +22,29 @@
       </header>
 
       <section class="intro" aria-labelledby="page-title">
-        <p class="eyebrow">ROCK / PAPER / SCISSORS <span>01</span></p>
         <h1 id="page-title">Make your move.</h1>
         <p class="intro-copy">
           A pattern-learning opponent is watching. Keep it guessing.
         </p>
+      </section>
+
+      <section class="model-picker" aria-labelledby="model-title">
+        <div class="model-picker-info">
+          <p class="model-picker-label" id="model-title">
+            CHOOSE YOUR OPPONENT
+          </p>
+          <p class="model-picker-copy" id="model-description">
+            Counters the move you use most often.
+          </p>
+        </div>
+        <label class="model-select-label" for="model-select"
+          >LEARNING STYLE</label
+        >
+        <select id="model-select" aria-label="Choose opponent model">
+          <option value="frequency">Adaptive Frequency</option>
+          <option value="naive-bayes">Naive Bayes</option>
+          <option value="perceptron">Perceptron</option>
+        </select>
       </section>
 
       <section class="scoreboard" aria-label="Game score">
@@ -62,7 +74,7 @@
           <div class="versus">VS</div>
           <div class="fighter-card fighter-card--ai">
             <div class="fighter-label">
-              <span>02</span><span>ADAPTIVE AI</span>
+              <span>02</span><span id="model-name">ADAPTIVE FREQUENCY</span>
             </div>
             <div class="hand-display" id="computer-display"><span>?</span></div>
           </div>
