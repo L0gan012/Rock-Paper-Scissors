@@ -1,5 +1,6 @@
 import '../style.css';
 import { chooseNaiveBayesMove, type GameRecord } from './models/naiveBayes';
+import { choosePerceptronMove } from './models/perceptron';
 
 type Move = 'rock' | 'paper' | 'scissors';
 type Outcome = 'win' | 'tie' | 'loss';
@@ -79,32 +80,11 @@ function mostFrequentMove(): Move {
   return moves.reduce((mostCommon, move) => counts[move] > counts[mostCommon] ? move : mostCommon, 'rock');
 }
 
-function perceptronMove(): Move {
-  if (history.length < 2) return randomMove();
-  const weights = Array.from({ length: 4 }, () => [0, 0, 0]);
-  const score = (features: number[], classIndex: number) => features.reduce((sum, feature, index) => sum + feature * weights[index][classIndex], 0);
-  for (let pass = 0; pass < 12; pass += 1) {
-    for (let index = 1; index < history.length; index += 1) {
-      const features = [1, 0, 0, 0];
-      features[moves.indexOf(history[index - 1]) + 1] = 1;
-      const classScores = moves.map((_, classIndex) => score(features, classIndex));
-      const predicted = classScores.indexOf(Math.max(...classScores));
-      const actual = moves.indexOf(history[index]);
-      if (predicted !== actual) features.forEach((feature, featureIndex) => {
-        weights[featureIndex][predicted] -= feature;
-        weights[featureIndex][actual] += feature;
-      });
-    }
-  }
-  const features = [1, 0, 0, 0];
-  features[moves.indexOf(history[history.length - 1]) + 1] = 1;
-  return moves[ moves.map((_, classIndex) => score(features, classIndex)).indexOf(Math.max(...moves.map((_, classIndex) => score(features, classIndex)))) ];
-}
-
 function chooseComputerMove(): Move {
   if (selectedModel === 'naive-bayes') return chooseNaiveBayesMove(games);
+  if (selectedModel === 'perceptron') return choosePerceptronMove(games);
   if (history.length === 0) return randomMove();
-  const predictedMove = selectedModel === 'perceptron' ? perceptronMove() : mostFrequentMove();
+  const predictedMove = mostFrequentMove();
   return counters[predictedMove];
 }
 
